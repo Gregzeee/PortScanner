@@ -1,35 +1,48 @@
-import pyfiglet
-import socket
-from datetime import datetime
+import sys
+import PortScanner
 
-ascii_banner = pyfiglet.figlet_format("G-Scanner")
+# Create an instance of the PortScanner class
+scanner = PortScanner.PortScanner()
 
-print("-" * 50)
-print(ascii_banner)
-print("-" * 50)
+# Print the banner from the PortScanner class
+print(scanner.print_banner())
 
-NUMBER_OF_THREADS = 40
-open_ports = []
-closed_ports = 0
+# Ask the user to select an option
+option = scanner.select_option()
 
-HOST = socket.gethostbyname(input("Host(Ipv4): "))
-STARTING_PORT = int(input("Starting port: "))
-ENDING_PORT = int(input("Ending port: "))
-print(f"Scanning started at: {datetime.now().strftime('%H:%M:%S')}.")
-print("-" * 50)
-
-
-for port in range(STARTING_PORT, ENDING_PORT + 1):
-    SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    SOCKET.settimeout(0.2)
-    result = SOCKET.connect_ex((HOST, port))
-    if result == 0:
-        print(f"Port {port} is open.")
-        open_ports.append(port)
+# Handle different scanning options based on the user's choice
+if option == 1:
+    host = scanner.get_host()
+    port = int(input("Enter port to scan: "))
+    if port < 1 or port > 65535:
+        print(f"The port must be in the following range: 1-65535. You chose: {port}")
     else:
-        closed_ports += 1
-    SOCKET.close()
-
-
-print(f"Scanning was finished at: {datetime.now().strftime('%H:%M:%S')}.")
-print(f"Out of all the ports you scanned {len(open_ports)} ports were open and {closed_ports} were closed.")
+        # Scan a single specified port
+        scanner.scan_ports(host, port, port)
+elif option == 2:
+    host = scanner.get_host()
+    # Scan all ports (1-65535)
+    scanner.scan_ports(host, 1, 65535)
+elif option == 3:
+    host = scanner.get_host()
+    # Scan registered ports (1024-49151)
+    scanner.scan_ports(host, 1024, 49151)
+elif option == 4:
+    host = scanner.get_host()
+    # Scan well-known ports (0-1023)
+    scanner.scan_ports(host, 1, 1023)
+elif option == 5:
+    host = scanner.get_host()
+    # Scan dynamic and private ports (49152–65535)
+    scanner.scan_ports(host, 49152, 65535)
+elif option == 6:
+    host = scanner.get_host()
+    starting_port = int(input("Enter a starting port for a custom scan(1-65535): "))
+    ending_port = int(input("Enter an ending port for a custom scan(1-65535): "))
+    if not starting_port < 1 or not starting_port > 65535:
+        # Scan a custom range of ports
+        scanner.scan_ports(host=host, starting_port=starting_port, ending_port=ending_port)
+    else:
+        sys.exit("Invalid port range. Exiting program...")
+elif option == 7:
+    sys.exit("Exiting program...")
