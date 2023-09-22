@@ -1,6 +1,8 @@
 # PortScanner
  Simple port scanner made in python
 
+ Time spent making this project: 3 hrs 34 mins (This does not include googling. This only includes the time that I actually spent inside the files coding)
+
  # Todo
 
  - Add multi-threading
