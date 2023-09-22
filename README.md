@@ -16,3 +16,5 @@
  - Add a possibility to scan ip ranges all for same port ranges.
  - Move over to OOP structure using classes and spread out the code into multiple files to improve readability.
  - Add comments for more readability
+ - Add docstrings
+ - introduce functions
