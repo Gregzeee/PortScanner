@@ -2,7 +2,8 @@ import sys
 import pyfiglet
 import socket
 from datetime import datetime
-
+from threading import Lock, Thread
+from queue import Queue
 
 class PortScanner:
 
@@ -11,8 +12,11 @@ class PortScanner:
         Initialize an instance of the PortScanner class.
         Creates empty lists to store open and closed ports.
         """
-        self.open_ports = []
-        self.closed_ports = 0
+        self.open_ports = []  # List to store open ports
+        self.closed_ports = 0  # Counter for closed ports
+        self.thread_lock = Lock()  # Thread lock for synchronization
+        self.number_of_threads = 10  # Number of threads to use for scanning
+        self.q = Queue()  # Queue for storing ports to be scanned
 
     def print_banner(self):
         """
@@ -50,7 +54,7 @@ class PortScanner:
 
     def scan_ports(self, host, starting_port, ending_port):
         """
-        Scan a range of ports on the target host.
+        Scan a range of ports on the target host using multiple threads.
         Args:
             host (str): The target host's IPv4 address.
             starting_port (int): The first port in the range to scan.
@@ -58,20 +62,46 @@ class PortScanner:
         """
         print(f"Scanning started at: {datetime.now().strftime('%H:%M:%S')}.")
         print("-" * 70)
+
+        # Populate the queue with ports to scan
         for port in range(starting_port, ending_port + 1):
+            self.q.put(port)
+
+        # Create and start threads for port scanning
+        threads = []
+        for _ in range(self.number_of_threads):
+            thread = Thread(target=self.scan_ports_thread, args=(host,))
+            thread.start()
+            threads.append(thread)
+
+        # Wait for all threads to finish
+        for thread in threads:
+            thread.join()
+
+        print(f"Scanning was finished at: {datetime.now().strftime('%H:%M:%S')}.")
+        print(f"Out of all the ports you scanned {len(self.open_ports)} ports were open and {self.closed_ports} were "
+              f"closed.")
+
+    def scan_ports_thread(self, host):
+        """
+        Scan ports in a separate thread.
+        Args:
+            host (str): The target host's IPv4 address.
+        """
+        while not self.q.empty():
+            port = self.q.get()
             try:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.settimeout(0.2)
                 result = sock.connect_ex((host, port))
 
                 if result == 0:
-                    print(f"Port {port} is open.")
-                    self.open_ports.append(port)
+                    with self.thread_lock:
+                        print(f"Port {port} is open.")
+                        self.open_ports.append(port)
                 else:
-                    self.closed_ports += 1
+                    with self.thread_lock:
+                        self.closed_ports += 1
                 sock.close()
             except OSError as error:
                 sys.exit(f"Socket error occurred. Error: {error}")
-        print(f"Scanning was finished at: {datetime.now().strftime('%H:%M:%S')}.")
-        print(f"Out of all the ports you scanned {len(self.open_ports)} ports were open and {self.closed_ports} were "
-              f"closed.")
