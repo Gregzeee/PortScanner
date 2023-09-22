@@ -11,4 +11,3 @@
  - Add async functions
  - Add socket reusage
  - Add a possibility to scan ip ranges all for same port ranges.
- - introduce functions
