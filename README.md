@@ -6,8 +6,3 @@
  - 1 thread: 300 ports per minute
  - 5 threads: 1500 ports per minute
  - 10 threads: 3000 ports per minute
- # Todo
-
- - Add customizability with colorama maybe
- - Add more detail to the message which says Port <port number> is open.
- - Add async functions
